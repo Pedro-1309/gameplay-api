@@ -1,0 +1,40 @@
+{
+  "totalGames": 1,
+  "totalWins": 0,
+  "history": [
+    {
+      "result": "lost",
+      "role": "wolf",
+      "numbOfPlayers": 4,
+      "gameMode": "classic",
+      "playedAt": "2023-10-27T16:45:00.000Z"
+    }
+  ]
+}
+{
+  "totalGames": 100,
+  "totalWins": 60,
+  "history": [
+    {
+      "result": "won",
+      "role": "citizen",
+      "numbOfPlayers": 10,
+      "gameMode": "advanced",
+      "playedAt": "2023-10-27T14:30:00.000Z"
+    },
+    {
+      "result": "lost",
+      "role": "wolf",
+      "numbOfPlayers": 10,
+      "gameMode": "advanced",
+      "playedAt": "2023-10-27T13:15:00.000Z"
+    },
+    {
+      "result": "won",
+      "role": "citizen",
+      "numbOfPlayers": 6,
+      "gameMode": "classic",
+      "playedAt": "2023-10-26T21:00:00.000Z"
+    }
+  ]
+}

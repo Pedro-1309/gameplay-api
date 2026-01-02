@@ -1,0 +1,4 @@
+- Nella inizializzazione del db compare anche una collezione "rooms", non so se sia 
+    un problema di copia-incolla che non sono riuscito a trovare o un problema nella creazione del container con docker.
+- Refactoring dei nomi dei file e delle funzioni.
+- Definizione API (quindi anche del file swagger).

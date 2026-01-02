@@ -1,0 +1,53 @@
+services:
+  # the actual db
+  mongo:
+    image: mongo
+    container_name: stats-mongodb-container
+    restart: always
+    volumes:
+      - ./import:/docker-entrypoint-initdb.d:ro
+    networks:
+      - stats-internal-net
+
+  # the management interface to the db 
+  mongo-express:
+    depends_on:
+      - mongo
+    image: mongo-express
+    restart: always
+    ports:
+      # for development purposes only
+      - 8083:8081
+    networks:
+      - stats-internal-net 
+    environment:
+      ME_CONFIG_MONGODB_SERVER: stats-mongodb-container
+      # TODO: use auth to access this or remove entirely on deploy
+      ME_CONFIG_BASICAUTH: false
+
+  # the api built on top of the db
+  frontend:
+    build: .
+    container_name: stats-api
+    depends_on:
+      - mongo
+    ports:
+      - ${PORT}:${PORT}
+    networks:
+      - stats-internal-net
+      - town-of-saviom-shared-net
+    environment:
+      # mongodb-container -> nome container del db
+      # stats -> nome del db
+      - MONGO_URI=mongodb://stats-mongodb-container:27017/stats
+      # production or debug
+      - NODE_ENV=debug
+      # auth-service container url
+      - AUTH_SERVICE_URL=http://login-api:${LOGIN_API_PORT}
+      - PORT=${PORT}
+
+networks:
+  stats-internal-net:
+    driver: bridge
+  town-of-saviom-shared-net:
+    external: true

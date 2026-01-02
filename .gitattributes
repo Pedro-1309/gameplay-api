@@ -1,0 +1,5 @@
+# Force all shell scripts and init files to use LF regardless of OS
+*.sh      text eol=lf
+*.js      text eol=lf
+*.json    text eol=lf
+Dockerfile text eol=lf

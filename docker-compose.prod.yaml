@@ -1,0 +1,35 @@
+services:
+  # the actual db
+  mongo:
+    image: mongo
+    container_name: stats-mongodb-container
+    restart: always
+    volumes:
+      - ./import:/docker-entrypoint-initdb.d:ro
+    networks:
+      - stats-internal-net
+
+  # the api built on top of the db
+  frontend:
+    build: .
+    container_name: stats-api
+    depends_on:
+      - mongo
+    ports:
+      - ${PORT}:${PORT}
+    networks:
+      - stats-internal-net
+      - town-of-saviom-shared-net
+    environment:
+      # mongodb-container -> nome container del db
+      # stats -> nome del db
+      - MONGO_URI=mongodb://stats-mongodb-container:27017/stats
+      # auth-service container url
+      - AUTH_SERVICE_URL=http://login-api:3000
+      - PORT=${PORT}
+
+networks:
+  stats-internal-net:
+    driver: bridge
+  town-of-saviom-shared-net:
+    external: true
