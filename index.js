@@ -9,10 +9,10 @@ const { Server } = require("socket.io");
 const protectedRouter = require('./src/routes/protectedRouter');
 const publicRouter = require('./src/routes/publicRouter');
 const authorizationMiddleware = require('./src/middlewares/authorizationMiddleware');
-const { roomSocket } = require('./src/socket/roomSocket');
+const { roomSocket } = require('./src/socket/gameSocket');
 
 // env variables
-const connectionString = process.env.MONGO_URI || 'mongodb://localhost:27017/stats';
+const connectionString = process.env.MONGO_URI || 'mongodb://localhost:27017/game';
 const isDebug = process.env.NODE_ENV == 'debug';
 const port = process.env.PORT || 3002;
 
@@ -62,7 +62,7 @@ io.use(authorizationMiddleware.socketAuthorize);
 app.use(authorizationMiddleware.authorize);
 
 // Protected Socket.io handler
-io.on("connection", roomSocket);
+io.on("connection", gameSocket);
 
 // Protected API routes
 app.use('/', protectedRouter);

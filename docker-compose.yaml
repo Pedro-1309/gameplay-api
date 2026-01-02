@@ -2,12 +2,12 @@ services:
   # the actual db
   mongo:
     image: mongo
-    container_name: stats-mongodb-container
+    container_name: gameplay-mongodb-container
     restart: always
     volumes:
       - ./import:/docker-entrypoint-initdb.d:ro
     networks:
-      - stats-internal-net
+      - gameplay-internal-net
 
   # the management interface to the db 
   mongo-express:
@@ -19,22 +19,22 @@ services:
       # for development purposes only
       - 8083:8081
     networks:
-      - stats-internal-net 
+      - gameplay-internal-net 
     environment:
-      ME_CONFIG_MONGODB_SERVER: stats-mongodb-container
+      ME_CONFIG_MONGODB_SERVER: gameplay-mongodb-container
       # TODO: use auth to access this or remove entirely on deploy
       ME_CONFIG_BASICAUTH: false
 
   # the api built on top of the db
   frontend:
     build: .
-    container_name: stats-api
+    container_name: gameplay-api
     depends_on:
       - mongo
     ports:
       - ${PORT}:${PORT}
     networks:
-      - stats-internal-net
+      - gameplay-internal-net
       - town-of-saviom-shared-net
     environment:
       # mongodb-container -> nome container del db
@@ -47,7 +47,7 @@ services:
       - PORT=${PORT}
 
 networks:
-  stats-internal-net:
+  gameplay-internal-net:
     driver: bridge
   town-of-saviom-shared-net:
     external: true
