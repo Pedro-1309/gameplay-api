@@ -1,4 +1,4 @@
-const { statsModel } = require('../models/statsModel');
+const { gameModel } = require('../models/gameModel');
 
 exports.addResult = (req, res) => {
     const results = req.body;
