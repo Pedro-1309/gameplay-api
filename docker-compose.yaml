@@ -43,7 +43,7 @@ services:
       # production or debug
       - NODE_ENV=debug
       # auth-service container url
-      - AUTH_SERVICE_URL=#{AUTH_SERVICE_URL}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
       # origin url accepted by cors
       - CORS_ORIGIN=http://localhost:5173
 
