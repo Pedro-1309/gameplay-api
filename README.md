@@ -1,4 +1,4 @@
-# Stats-api
+# Gameplay-api
 
 Run
 
