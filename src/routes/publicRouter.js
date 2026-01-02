@@ -7,4 +7,9 @@ router.route('/stats')
     .post(controller.listStats);
 */
 
+router.route("/")
+    .get((_, res) => {
+        res.redirect(301, '/api-docs');
+    });
+    
 module.exports = router;

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DB_NAME="stats"
-DB_COLLECTION="results"
+DB_NAME="games"
+DB_COLLECTION="games"
 
 echo "Importing databases"
 

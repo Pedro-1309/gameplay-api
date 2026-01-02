@@ -1,6 +1,6 @@
 services:
   # the actual db
-  mongo:
+  gameplay-mongo:
     image: mongo
     container_name: gameplay-mongodb-container
     restart: always
@@ -10,14 +10,14 @@ services:
       - gameplay-internal-net
 
   # the management interface to the db 
-  mongo-express:
+  gameplay-mongo-express:
     depends_on:
-      - mongo
+      - gameplay-mongo
     image: mongo-express
     restart: always
     ports:
       # for development purposes only
-      - 8083:8081
+      - ${GAMEPLAY_DB_UI_PORT:-8081}:8081
     networks:
       - gameplay-internal-net 
     environment:
@@ -26,25 +26,26 @@ services:
       ME_CONFIG_BASICAUTH: false
 
   # the api built on top of the db
-  frontend:
+  gameplay-frontend:
     build: .
     container_name: gameplay-api
     depends_on:
-      - mongo
+      - gameplay-mongo
     ports:
-      - ${PORT}:${PORT}
+      - ${GAMEPLAY_API_PORT}:3000
     networks:
       - gameplay-internal-net
       - town-of-saviom-shared-net
     environment:
       # mongodb-container -> nome container del db
       # stats -> nome del db
-      - MONGO_URI=mongodb://stats-mongodb-container:27017/stats
+      - MONGO_URI=mongodb://stats-mongodb-container:27017/games
       # production or debug
       - NODE_ENV=debug
       # auth-service container url
-      - AUTH_SERVICE_URL=http://login-api:${LOGIN_API_PORT}
-      - PORT=${PORT}
+      - AUTH_SERVICE_URL=#{AUTH_SERVICE_URL}
+      # origin url accepted by cors
+      - CORS_ORIGIN=http://localhost:5173
 
 networks:
   gameplay-internal-net:
