@@ -10,6 +10,8 @@ const protectedRouter = require('./src/routes/protectedRouter');
 const publicRouter = require('./src/routes/publicRouter');
 const authorizationMiddleware = require('./src/middlewares/authorizationMiddleware');
 const { gameSocket } = require('./src/socket/gameSocket');
+const gameController = require('./src/controllers/gameController');
+const gameManager = require('./engine/GameEnginesManager');
 
 // env variables
 const connectionString = process.env.MONGO_URI || 'mongodb://localhost:27017/game';
@@ -43,6 +45,9 @@ const io = new Server(httpServer, {
 });
 app.set('io', io);
 
+// Start the Manager and resume games from DB
+gameManager.resumeGames(io);
+
 // Debugging middleware
 if (isDebug) {
     app.use((req, _, next) => {
@@ -56,6 +61,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Public API routes
 app.use('/', publicRouter);
+
+// Internal API routes
+app.post('/games', authorizationMiddleware.internalAuthorize, gameController.addGame)
 
 // Authorization middleware
 io.use(authorizationMiddleware.socketAuthorize);

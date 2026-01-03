@@ -2,11 +2,10 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/gameController');
 
-router.route('/stats')
-    .get(controller.getStats)
-    .delete(controller.deleteStats);
+router.route('/games')
+    .post(controller.addGame);
 
-router.route('/history')
-    .get(controller.getHistory);
+router.route('/reconnect')
+    .get(controller.reconnect);
 
 module.exports = router;

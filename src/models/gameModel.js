@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
+const GamePhases = require('../engine/GamePhases');
 
 const gameSchema = new mongoose.Schema({
     _id: { type: String, required: true },
+    serverUrl: { type: String, required: true },
     numbOfPlayers: { type: Number, required: true },
     gameMode: { type: String, 
         enum: ['classic', 'advanced'], 
@@ -27,7 +29,7 @@ const gameSchema = new mongoose.Schema({
         _id: false // Evita di creare un _id per ogni singolo oggetto giocatore nel vettore
     }],
     phase: {type: String, 
-            enum: ['day', 'night', 'defense'], 
+            enum: GamePhases, 
             default: 'day',
             required: true},
 }, {

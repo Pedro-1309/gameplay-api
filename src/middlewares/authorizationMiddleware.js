@@ -1,8 +1,11 @@
 const {validateToken} = require('../services/authorizationService');
+const isDebug = process.env.NODE_ENV == 'debug';
 
 exports.authorize = async (req, res, next) => {
-    const authHeader = req.headers['authorization']
-    console.log(authHeader);
+    const authHeader = req.headers['authorization'];
+    if (isDebug) {
+        console.log(authHeader);
+    }
     // Header format is: "Bearer <token>"
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -32,3 +35,23 @@ exports.socketAuthorize = async (socket, next) => {
     }
     next();
 };
+
+exports.internalAuthorize = async (req, res, next) => {
+    const internalSecret = req.headers['x-internal-secret'];
+    const internalServiceId = req.headers['x-internal-service-id'];
+
+    if (isDebug) {
+        console.log(internalServiceId);
+        console.log(internalSecret);
+    }
+
+    if (!internalSecret || !internalServiceId) {
+        return res.sendStatus(401);
+    }
+
+    if (internalServiceId != process.env.LOBBY_X_INTERNAL_SERVICE_ID || internalSecret != process.env.X_INTERNAL_SECRET) {
+        return res.sendStatus(403);
+    }
+
+    next();
+}

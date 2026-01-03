@@ -41,11 +41,17 @@ services:
       # stats -> nome del db
       - MONGO_URI=mongodb://stats-mongodb-container:27017/games
       # production or debug
-      - NODE_ENV=debug
+      - NODE_ENV=${NODE_ENV}
       # auth-service container url
       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
       # origin url accepted by cors
-      - CORS_ORIGIN=http://localhost:5173
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      # stats-service conatiner url
+      - STATS_SERVICE_URL=${STATS_SERVICE_URL}
+      # info for internal network use
+      - GAMEPLAY_X_INTERNAL_SERVICE_ID=${GAMEPLAY_X_INTERNAL_SERVICE_ID}
+      - LOBBY_X_INTERNAL_SERVICE_ID=${LOBBY_X_INTERNAL_SERVICE_ID}
+      - X_INTERNAL_SECRET=${X_INTERNAL_SECRET}
 
 networks:
   gameplay-internal-net:
