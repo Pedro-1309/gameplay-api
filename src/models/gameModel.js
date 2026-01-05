@@ -1,36 +1,40 @@
 const mongoose = require('mongoose');
-const GamePhases = require('../engine/GamePhases');
+const Phase = require('../engine/townOfSaviom/Phase');
+const Status = require('../engine/townOfSaviom/Status');
+const Role = require('../engine/townOfSaviom/Role');
+const Result = require('../engine/townOfSaviom/Result');
+const GameMode = require('../engine/townOfSaviom/GameMode');
 
 const gameSchema = new mongoose.Schema({
     _id: { type: String, required: true },
     serverUrl: { type: String, required: true },
     numbOfPlayers: { type: Number, required: true },
     gameMode: { type: String, 
-        enum: ['classic', 'advanced'], 
-        required: true 
+        enum: GameMode, 
+        required: true
     },
     players: [{
         userId: { type: String, required: true},
         name: { type: String, required: true },
         imageUrl: String,
         role: { type: String, 
-            enum: ['wolf', 'villager', 'doctor', 'investigator'], 
-            default: 'villager',
+            enum: Role, 
+            default: Role.VILLAGER,
             required: true },
         status: {type: String, 
-            enum: ['player', 'spectator', 'quit'], 
-            default: 'player',
+            enum: Status, 
+            default: Status.PLAYING,
             required: true},
         result: {type: String, 
-            enum: ['won', 'lost', 'playing'], 
-            default: 'playing',
+            enum: Result, 
+            default: Result.PLAYING,
             required: true},
         votes:{ type: Number, default: 0 },
         _id: false // Evita di creare un _id per ogni singolo oggetto giocatore nel vettore
     }],
     phase: {type: String, 
-            enum: GamePhases, 
-            default: 'day',
+            enum: Phase, 
+            default: Phase.STARTUP,
             required: true},
 }, {
     versionKey: false,

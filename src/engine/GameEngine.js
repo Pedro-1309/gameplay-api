@@ -1,4 +1,3 @@
-const GamePhases = require("./GamePhases");
 const isDebug = process.env.NODE_ENV == 'debug';
 
 class GameEngine {
@@ -35,7 +34,7 @@ class GameEngine {
                     await this.next();
                     
                     // check if we can continue with the game or stop
-                    if (continue()) {
+                    if (canContinue()) {
                         this.startTimer();
                     }
                 } catch (err) {
@@ -57,11 +56,11 @@ class GameEngine {
         this.broadcastToChannel(this.gameId, event, data);
     }
 
-    broadcastToChannel(channel, event, data) {
+    broadcastToChannel(channel, eventType, data) {
         if (isDebug) {
-            console.log(`[${channel}] ${event} : ${data}`);
+            console.log(`[${channel}] ${eventType} : ${data}`);
         }
-        this.io.to(channel).emit(event, data);
+        this.io.to(channel).emit(eventType, data);
     }
 
     // handle specific sub channels join on socket
@@ -72,5 +71,7 @@ class GameEngine {
     // operations that need to be waited by clock
     async next() { throw new Error("Not implemented yet") }
     // check if the game should continue
-    continue() { throw new Error("Not implemented yet") }
+    canContinue() { throw new Error("Not implemented yet") }
 }
+
+module.exports = GameEngine;

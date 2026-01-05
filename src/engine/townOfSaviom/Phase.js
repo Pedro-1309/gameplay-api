@@ -1,4 +1,4 @@
-const GamePhases = Object.freeze({
+const Phase = Object.freeze({
     STARTUP: 'STARTUP',
     NIGHT: 'NIGHT',
     DAY: 'DAY',
@@ -6,4 +6,4 @@ const GamePhases = Object.freeze({
     GAME_OVER: 'GAME_OVER'
 });
 
-module.exports = GamePhases;
+module.exports = Phase;

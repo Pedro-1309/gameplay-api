@@ -11,7 +11,7 @@ const publicRouter = require('./src/routes/publicRouter');
 const authorizationMiddleware = require('./src/middlewares/authorizationMiddleware');
 const { gameSocket } = require('./src/socket/gameSocket');
 const gameController = require('./src/controllers/gameController');
-const gameManager = require('./engine/GameEnginesManager');
+const gameManager = require('./src/engine/GameEnginesManager');
 
 // env variables
 const connectionString = process.env.MONGO_URI || 'mongodb://localhost:27017/game';
@@ -20,9 +20,6 @@ const allowedOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
 
 // Swagger setup
 const swaggerDocument = yaml.load(path.join(__dirname, './docs/swagger.yaml'));
-
-// Mongoose setup
-mongoose.connect(connectionString);
 
 // Server setup
 const app = express();
@@ -44,9 +41,6 @@ const io = new Server(httpServer, {
     cors: corsOptions
 });
 app.set('io', io);
-
-// Start the Manager and resume games from DB
-gameManager.resumeGames(io);
 
 // Debugging middleware
 if (isDebug) {
@@ -75,4 +69,10 @@ io.on("connection", gameSocket);
 // Protected API routes
 app.use('/', protectedRouter);
 
-app.listen(3000, () => console.log("Server started"));
+// Mongoose setup
+mongoose.connect(connectionString).then(() => {
+    // Start the Manager and resume games from DB
+    gameManager.resumeGames(io);
+    // Start app only after db connectiona and games are resumed
+    app.listen(3000, () => console.log("Server started"));
+});

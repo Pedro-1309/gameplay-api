@@ -6,12 +6,10 @@ const TownOfSaviomGameEngine = require('./townOfSaviom/TownOfSaviomGameEngine');
 class GameEnginesManager {
     constructor() {
         this.gameEngines = new Map();
-        this.io = null;
     }
     
     // This is called once during server startup
     async resumeGames(io) {
-        this.io = io;
         console.log("Checking for active games to resume...");
 
         try {
@@ -19,7 +17,7 @@ class GameEnginesManager {
             const activeGamesInDb = await gameModel.find({ status: 'playing' });
 
             activeGamesInDb.forEach(gameData => {
-                const engine = new TownOfSaviomGameEngine(gameData._id.toString(), this.io);
+                const engine = new TownOfSaviomGameEngine(gameData._id.toString(), io);
                 
                 // Pass the DB data to the engine so it knows the current phase/timer
                 engine.resume(gameData); 
