@@ -1,6 +1,6 @@
 const gameManager = require('../engine/GameEnginesManager');
+const GameEvent = require('../engine/townOfSaviom/GameEvent');
 const isDebug = process.env.NODE_ENV == 'debug'
-const GAME_EVENTS = ['VOTE', 'QUIT', 'MESSAGE'];
 
 exports.gameSocket = (socket) => {
     const userId = socket.userInfo.id;
@@ -23,7 +23,7 @@ exports.gameSocket = (socket) => {
         socket.gameId = gameId;
 
         // to set specific user sub channels
-        engine.handlePlayerJoin(socket);
+        engine.handlePlayerJoin(socket, userId);
 
         if (isDebug) {
             console.log(`User ${name} joined game ${gameId}`);
@@ -31,7 +31,7 @@ exports.gameSocket = (socket) => {
     });
 
     // Forward game events to the game engine
-    GAME_EVENTS.forEach(eventName => {
+    GameEvent.forEach(eventName => {
         socket.on(eventName, (payload) => {
             const gameId = socket.gameId;
 
@@ -64,11 +64,10 @@ registerDisconnectHandler = (socket) => {
             // We don't want to broadcast to the user's private room (which is their own socket.id)
             if (roomId !== socket.id) {
                 // Notify OTHER users in the room
-                socket.to(roomId).emit("PLAYER_LEFT", {
-                    id: socket.userInfo.id,
-                    name: socket.userInfo.name,
-                    imageUrl: socket.userInfo.imageUrl
-                });
+                socket.to(roomId).emit(
+                    "MESSAGE_SENT",
+                    socket.userInfo.name + " disconnected"
+                );
             }
         });
     });

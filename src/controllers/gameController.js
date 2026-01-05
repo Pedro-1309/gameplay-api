@@ -33,13 +33,13 @@ exports.addGame = async (req, res) => {
         // 3. Save to Database
         await newGame.save();
 
-        gameManager.addGame(newGame._id.toString(), req.app.get('io'));
+        await gameManager.addGame(newGame._id.toString(), req.app.get('io'));
 
         return res.status(201).json({ gameId: newGame._id });
     } catch (error) {
         // rollback
         if (newGame) {
-            newGame.deleteOne();
+            await newGame.deleteOne();
         }
         console.error("Error creating Game from Room:", error);
         res.sendStatus(500);

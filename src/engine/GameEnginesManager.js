@@ -1,5 +1,6 @@
 const { gameModel } = require('../models/gameModel');
 const TownOfSaviomGameEngine = require('./townOfSaviom/TownOfSaviomGameEngine');
+const Phase = require('./townOfSaviom/Phase');
 
 // for the moment we use only townofsaviomengine
 
@@ -14,16 +15,22 @@ class GameEnginesManager {
 
         try {
             // Find games that are 'playing' and haven't ended
-            const activeGamesInDb = await gameModel.find({ status: 'playing' });
-
-            activeGamesInDb.forEach(gameData => {
-                const engine = new TownOfSaviomGameEngine(gameData._id.toString(), io);
-                
-                // Pass the DB data to the engine so it knows the current phase/timer
-                engine.resume(gameData); 
-                
-                this.gameEngines.set(gameData._id.toString(), engine);
+            const activeGamesInDb = await gameModel.find({ 
+                phase: { $ne: Phase.GAME_OVER } 
             });
+
+            const resumePromises = activeGamesInDb.map(async (gameData) => {
+                const gameId = gameData._id.toString();
+                const engine = new TownOfSaviomGameEngine(gameId, io);
+                
+                await engine.resume(gameData);
+                await engine.start();
+                
+                this.gameEngines.set(gameId, engine);
+            });
+
+            // Wait for every single game to finish resuming
+            await Promise.all(resumePromises);
 
             console.log(`Resumed ${this.gameEngines.size} games.`);
         } catch (err) {
@@ -31,21 +38,16 @@ class GameEnginesManager {
         }
     }
 
-    addGame(gameId, io) {
+    async addGame(gameId, io) {
         const engine = new TownOfSaviomGameEngine(gameId, io);
-        engine.init();
+        await engine.init();
+        engine.start();
         this.gameEngines.set(gameId, engine);
         return engine;
     }
 
     getGame(gameId) {
         return this.gameEngines.get(gameId);
-    }
-
-    removeGame(gameId) {
-        const engine = this.gameEngines.get(gameId);
-        if (engine) engine.stop();
-        this.gameEngines.delete(gameId);
     }
 }
 

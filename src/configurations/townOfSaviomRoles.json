@@ -1,0 +1,41 @@
+[
+    {
+        "players": 6,
+        "gameMode": "classic",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 7,
+        "gameMode": "classic",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 8,
+        "gameMode": "classic",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    }
+]

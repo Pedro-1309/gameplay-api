@@ -36,34 +36,19 @@ const gameSchema = new mongoose.Schema({
             enum: Phase, 
             default: Phase.STARTUP,
             required: true},
+    accused: { type: String }
 }, {
     versionKey: false,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 });
 
-gameSchema.virtual('wolvesAlive').get(function() {
-    return this.players.filter(p => p.role === 'wolf' && p.status === 'player').length;
+gameSchema.virtual('werewolfAlive').get(function() {
+    return this.players.filter(p => p.role === Role.WEREWOLF && p.status === Status.PLAYING).length;
 });
 
 gameSchema.virtual('playersAlive').get(function() {
-    return this.players.filter(p => p.status === 'player').length;
-});
-
-gameSchema.virtual('gameStatus').get(function() {
-    const wolves = this.wolvesAlive;
-    const totalAlive = this.playersAlive;
-    const villagers = totalAlive - wolves;
-
-    if (wolves === 0) {
-        return { over: true, winner: 'villagers' };
-    }
-    
-    if (wolves >= villagers) {
-        return { over: true, winner: 'wolves' };
-    }
-
-    return { over: false, winner: null };
+    return this.players.filter(p => p.status === Status.PLAYING).length;
 });
 
 const gameModel = mongoose.model('game', gameSchema)
