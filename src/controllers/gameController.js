@@ -35,7 +35,10 @@ exports.addGame = async (req, res) => {
 
         await gameManager.addGame(newGame._id.toString(), req.app.get('io'));
 
-        return res.status(201).json({ gameId: newGame._id });
+        return res.status(201).json({ 
+            gameId: newGame._id, 
+            serverUrl: "http://gameplay-api:3000" 
+        });
     } catch (error) {
         // rollback
         if (newGame) {
@@ -46,6 +49,32 @@ exports.addGame = async (req, res) => {
     }
 };
 
-exports.reconnect = (req, res) => {
-    // TODO based on user info find the current game and return info
+exports.getGame = async (req, res) => {
+    const room = await roomModel.findById(req.params.id);
+    // Check that the player asking info is in fact in this game
+    const requestingPlayer = room.players.find(p => p.userId == req.userInfo.id);
+    if (!requestingPlayer) {
+        return res.sendStatus(403);
+    }
+    // Filter hidden informations
+    const filteredPlayers = room.players.map(player => {
+        const playerInfo = { ...player.toObject() };
+        // Always see my role
+        if (player.userId == req.userInfo.id) {
+            return playerInfo;
+        }
+        // If I'm a WEREWOLF, show other WEREWOLFs
+        if (requestingPlayer.role === Role.WEREWOLF && player.role === Role.WEREWOLF) {
+            return playerInfo;
+        }
+        // Default: Hide the role for everyone else
+        delete playerInfo.role; 
+        return playerInfo;
+    });
+
+    // return the room data with the filtered players
+    res.json({
+        ...room.toObject(),
+        players: filteredPlayers
+    });
 };

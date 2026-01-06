@@ -1,106 +1,63 @@
 # Overview of the API
 openapi: 3.1.1
 info:
-  title: Stats API
+  title: Gameplay API
   version: 1.0.0
-  description: API for managing game statistics, win rates, and match history for players.
+  description: API for managing running games
       
 paths:
   # -------------------------
-  # PUBLIC ROUTES
+  # INTERNAL ROUTES
   # -------------------------
-  /result:
+  /games:
     post:
-      summary: Add game results
+      summary: Adds a new game.
+      description: Create a new game instance on db and starts a GameEnging running that game logic.
       tags:
-        - Public
-      description: Bulk update or create statistics for players. New games are added to the top of the history (max 10).
+        - Games
+      security:
+        - ServiceIdAuth: []
+          ServiceSecretAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/GameResultInput'
+              $ref: '#/components/schemas/GameRequest'
       responses:
-        '200':
-          description: List of updated player documents.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StatsDocument'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+        201:
+          description: Game added correctly
+        500:
+          description: Internal Server Error
+
   # -------------------------
   # PROTECTED ROUTES
   # -------------------------
-  /stats:
+  /games/{id}:
     get:
-      summary: Get user's global stats
+      summary: Retrieve details of a specific game
       tags:
-        - Protected
+        - Games
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the game
+          schema:
+            type: string
       responses:
-        '200':
-          description: Returns global counters and virtuals (winRate, etc).
+        200:
+          description: Game details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GlobalStats'
-        '400':
-          description: Missing ID in authentication.
-        '404':
-          description: User not found.
-        '500':
-          description: Server error.
-
-    delete:
-      summary: Remove user's stats
-      tags:
-        - Protected
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Stats removed successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Stats removed successfully
-        '404':
-          description: User not found.
-
-  /history:
-    get:
-      summary: Get user's match history
-      tags:
-        - Protected
-      security:
-        - bearerAuth: []
-      description: Returns the last 10 games played by the user.
-      responses:
-        '200':
-          description: Array of match history entries.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/HistoryEntry'
-        '404':
-          description: User not found.
+                $ref: '#/components/schemas/Game'
+        403:
+          description: You aren't in this game
+        404:
+          description: Game not found
 
 components:
   # -------------------------
@@ -111,100 +68,102 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    ServiceIdAuth:
+      type: apiKey
+      in: header
+      name: x-internal-service-id
+    ServiceSecretAuth:
+      type: apiKey
+      in: header
+      name: x-internal-secret
 
   # -------------------------
   # DATA SCHEMAS
   # -------------------------
   schemas:
-    # Input for adding results
-    GameResultInput:
+    Player:
       type: object
-      required:
-        - _id
-        - result
-        - role
-        - numbOfPlayers
-        - gameMode
       properties:
-        _id:
+        userId:
           type: string
-          description: The player's unique identifier.
-        result:
+          example: "6585f9e2b1c2d3e4f5a6b7c0"
+        name:
           type: string
-          enum: [won, lost]
-          example: "won"
+          example: "MarioRossi"
+        imageUrl:
+          type: string
+          example: "http://example.com/avatar.jpg"
         role:
           type: string
-          example: "wolf"
-        numbOfPlayers:
-          type: integer
-          example: 6
-        gameMode:
+          enum: [VILLAGER, WEREWOLF, SEER, DOCTOR]
+          example: "VILLAGER"
+        status:
           type: string
-          enum: [classic, advanced]
-          example: "classic"
-
-    # Global statistics (includes virtuals)
-    GlobalStats:
-      type: object
-      properties:
-        totalGames:
-          type: integer
-          example: 50
-        totalWins:
-          type: integer
-          example: 30
-        totalLosses:
-          type: integer
-          example: 20
-        winRate:
-          type: string
-          example: "60.00%"
-
-    # Individual match history entry
-    HistoryEntry:
-      type: object
-      properties:
+          enum: [PLAYING, WATCHING, LEFT]
+          example: PLAYING
         result:
           type: string
-          enum: [won, lost]
-          example: "lost"
-        role:
+          enum: [PLAYING, WON, LOST]
+          example: PLAYING
+        votes:
+          type: integer
+          example: 0
+
+    Game:
+      type: object
+      properties:
+        id:
           type: string
-          example: "citizen"
+          example: "6585f9e2b1c2d3e4f5a6b7c8"
+        serverUrl:
+          type: string
+          example: "http://localhost:3000"
         numbOfPlayers:
           type: integer
           example: 8
         gameMode:
           type: string
           enum: [classic, advanced]
-          example: "advanced"
-        playedAt:
-          type: string
-          format: date-time
-          example: "2023-10-27T10:00:00Z"
-
-    # Full database document
-    StatsDocument:
-      type: object
-      properties:
-        _id:
-          type: string
-        totalGames:
+          example: "classic"
+        roomCapacity:
           type: integer
-          example: 1
-        totalWins:
-          type: integer
-          example: 1
-        history:
+          example: 4
+        players:
           type: array
           items:
-            $ref: '#/components/schemas/HistoryEntry'
+            $ref: '#/components/schemas/Player'
+        phase:
+          type: string
+          enum: [STARTUP, DAY, NIGHT, DEFENCE, GAMEOVER]
+          example: "STARTUP"
+        accused:
+          type: string
+          example: "6585f9e2b1c2d3e4f5a6b7ks"
 
-    ErrorResponse:
+    PlayerRequest:
       type: object
       properties:
-        message:
+        userId:
           type: string
-        error:
+          example: "6585f9e2b1c2d3e4f5a6b7c0"
+        name:
           type: string
+          example: "MarioRossi"
+        imageUrl:
+          type: string
+          example: "http://example.com/avatar.jpg"
+
+    GameRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "6585f9e2b1c2d3e4f5a6b7c8"
+        gameMode:
+          type: string
+          enum: [classic, advanced]
+          example: "classic"
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerRequest'

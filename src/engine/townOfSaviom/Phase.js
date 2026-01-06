@@ -3,7 +3,7 @@ const Phase = Object.freeze({
     NIGHT: 'NIGHT',
     DAY: 'DAY',
     DEFENCE: 'DEFENCE',
-    GAME_OVER: 'GAME_OVER'
+    GAMEOVER: 'GAMEOVER'
 });
 
 module.exports = Phase;

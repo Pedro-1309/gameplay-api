@@ -5,7 +5,7 @@ const controller = require('../controllers/gameController');
 router.route('/games')
     .post(controller.addGame);
 
-router.route('/reconnect')
-    .get(controller.reconnect);
+router.route('/games/:id')
+    .get(controller.getGame);
 
 module.exports = router;
