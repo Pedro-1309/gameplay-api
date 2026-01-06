@@ -1,37 +1,38 @@
-const gameManager = require('../engine/GameEnginesManager');
 const GameEvent = require('../engine/townOfSaviom/GameEvent');
 const isDebug = process.env.NODE_ENV == 'debug'
 
-exports.gameSocket = (socket) => {
-    const userId = socket.userInfo.id;
-    const { name } = socket.userInfo;
-
+log = (message) => {
     if (isDebug) {
-        console.log(`User Connected: ${name} (${userId})`);
+        console.log(message);
     }
+}
 
-    // Join the specific game room
-    socket.on('JOIN', ({ gameId }) => {
-        const engine = gameManager.getGame(gameId);
-        
-        if (!engine) {
-            return socket.emit('error', 'Game not found');
-        }
-        // actual socket join
-        socket.join(gameId);
-        // set the socket game id for static use
-        socket.gameId = gameId;
+exports.gameSocket = (socket) => {
+    const gameManager = require('../engine/GameEnginesManager');
+    const userId = socket.userInfo.id;
+    const name = socket.userInfo.name;
+    const gameId = socket.handshake.query.gameId;
 
-        // to set specific user sub channels
-        engine.handlePlayerJoin(socket, userId);
+    log(`User ${name} (${userId}) trying to connect to game ${gameId}`);
 
-        if (isDebug) {
-            console.log(`User ${name} joined game ${gameId}`);
-        }
-    });
+    const engine = gameManager.getGame(gameId);
+    if (!engine) {
+        return socket.emit('error', 'Game not found');
+    }
+    // actual socket join
+    socket.join(gameId);
+    // set the socket game id for static use
+    socket.gameId = gameId;
+
+    socket.to(gameId).emit("MESSAGE_SENT", `${name} connected`);
+
+    // to set specific user sub channels
+    engine.handlePlayerJoin(socket, userId);
+
+    log(`User ${name} joined game ${gameId}`);
 
     // Forward game events to the game engine
-    GameEvent.forEach(eventName => {
+    Object.values(GameEvent).forEach(eventName => {
         socket.on(eventName, (payload) => {
             const gameId = socket.gameId;
 

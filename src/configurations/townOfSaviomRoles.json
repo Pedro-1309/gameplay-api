@@ -37,5 +37,44 @@
             "WEREWOLF",
             "WEREWOLF"
         ]
+    },
+    {
+        "players": 6,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "SEER",
+            "DOCTOR",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 7,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "SEER",
+            "DOCTOR",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 8,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "SEER",
+            "DOCTOR",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
     }
 ]

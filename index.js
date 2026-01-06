@@ -74,5 +74,5 @@ mongoose.connect(connectionString).then(() => {
     // Start the Manager and resume games from DB
     gameManager.resumeGames(io);
     // Start app only after db connectiona and games are resumed
-    app.listen(3000, () => console.log("Server started"));
+    httpServer.listen(3000, () => console.log("Server started"));
 });

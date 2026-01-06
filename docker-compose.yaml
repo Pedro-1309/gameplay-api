@@ -2,7 +2,6 @@ services:
   # the actual db
   gameplay-mongo:
     image: mongo
-    container_name: gameplay-mongodb-container
     restart: always
     volumes:
       - ./import:/docker-entrypoint-initdb.d:ro
@@ -21,9 +20,10 @@ services:
     networks:
       - gameplay-internal-net 
     environment:
-      ME_CONFIG_MONGODB_SERVER: gameplay-mongodb-container
+      - ME_CONFIG_MONGODB_URL=mongodb://gameplay-mongo:27017/
+      - ME_CONFIG_MONGODB_SERVER=gameplay-mongo
       # TODO: use auth to access this or remove entirely on deploy
-      ME_CONFIG_BASICAUTH: false
+      - ME_CONFIG_BASICAUTH=false
 
   # the api built on top of the db
   gameplay-frontend:
@@ -39,7 +39,7 @@ services:
     environment:
       # gameplay-mongodb-container -> nome container del db
       # games -> nome del db
-      - MONGO_URI=mongodb://gameplay-mongodb-container:27017/games
+      - MONGO_URI=mongodb://gameplay-mongo:27017/games
       # production or debug
       - NODE_ENV=${NODE_ENV}
       # auth-service container url
