@@ -8,6 +8,20 @@ class GameEngine {
         this.remainingTicksOfThisPhase = 30; // seconds
         this.tickDuration = 1000; // 1 second
     }
+    
+    _saveQueue = Promise.resolve();
+
+    async queueSave() {
+        this._saveQueue = this._saveQueue.then(async () => {
+            try {
+                await this.game.save();
+                this.log("Game document saved successfully.");
+            } catch (err) {
+                this.error("Failed to save game document:", err);
+            }
+        });
+        return this._saveQueue;
+    }
 
     async start() {
         this.stop(); // Clear any existing timer
