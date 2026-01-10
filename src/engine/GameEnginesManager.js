@@ -1,5 +1,5 @@
 const { gameModel } = require('../models/gameModel');
-const TownOfSaviomGameEngine = require('./townOfSaviom/TownOfSaviomGameEngine');
+const TownOfSaviomClassic = require('./townOfSaviom/TownOfSaviomClassic');
 const Phase = require('./townOfSaviom/Phase');
 
 // for the moment we use only townofsaviomengine
@@ -21,7 +21,7 @@ class GameEnginesManager {
 
             const resumePromises = activeGamesInDb.map(async (gameData) => {
                 const gameId = gameData._id.toString();
-                const engine = new TownOfSaviomGameEngine(gameId, io);
+                const engine = new TownOfSaviomClassic(gameId, io);
                 
                 await engine.resume(gameData);
                 await engine.start();
@@ -39,7 +39,7 @@ class GameEnginesManager {
     }
 
     async addGame(gameId, io) {
-        const engine = new TownOfSaviomGameEngine(gameId, io);
+        const engine = new TownOfSaviomClassic(gameId, io);
         await engine.init();
         engine.start();
         this.gameEngines.set(gameId, engine);

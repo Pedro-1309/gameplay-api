@@ -53,11 +53,13 @@ exports.getGame = async (req, res) => {
     const room = await gameModel.findById(req.params.id);
     if (!room) {
         res.sendStatus(404);
+        return;
     }
     // Check that the player asking info is in fact in this game
     const requestingPlayer = room.players.find(p => p.userId == req.userInfo.id);
     if (!requestingPlayer) {
         res.sendStatus(403);
+        return;
     }
     // Filter hidden informations
     const filteredPlayers = room.players.map(player => {

@@ -4,6 +4,7 @@ const Status = require('../engine/townOfSaviom/Status');
 const Role = require('../engine/townOfSaviom/Role');
 const Result = require('../engine/townOfSaviom/Result');
 const GameMode = require('../engine/townOfSaviom/GameMode');
+const VoteType = require('../engine/townOfSaviom/VoteType');    
 
 const gameSchema = new mongoose.Schema({
     _id: { type: String, required: true },
@@ -17,26 +18,40 @@ const gameSchema = new mongoose.Schema({
         userId: { type: String, required: true},
         name: { type: String, required: true },
         imageUrl: String,
-        role: { type: String, 
+        role: { 
+            type: String, 
             enum: Role, 
             default: Role.VILLAGER,
-            required: true },
-        status: {type: String, 
+            required: true 
+        },
+        status: {
+            type: String, 
             enum: Status, 
             default: Status.PLAYING,
-            required: true},
-        result: {type: String, 
+            required: true
+        },
+        result: {
+            type: String, 
             enum: Result, 
             default: Result.PLAYING,
-            required: true},
+            required: true
+        },
         votes:{ type: Number, default: 0 },
+        voting: String,
+        vote: {
+            type: String,
+            enum: [VoteType.GUILTY, VoteType.INNOCENT, VoteType.ACTION],
+            default: VoteType.ACTION,
+            required: false
+        },
         _id: false // Evita di creare un _id per ogni singolo oggetto giocatore nel vettore
     }],
     phase: {type: String, 
             enum: Phase, 
             default: Phase.STARTUP,
             required: true},
-    accused: { type: String }
+    phaseDuration: { type: Number, default: 30 }, // in seconds
+    accused: String
 }, {
     versionKey: false,
     toJSON: { virtuals: true },
@@ -49,6 +64,20 @@ gameSchema.virtual('werewolfAlive').get(function() {
 
 gameSchema.virtual('playersAlive').get(function() {
     return this.players.filter(p => p.status === Status.PLAYING).length;
+});
+
+gameSchema.virtual('guiltyVotes').get(function() {
+    return this.players.filter(
+        p => p.vote === VoteType.GUILTY && 
+            p.status === Status.PLAYING && p.voting
+    ).length;
+});
+
+gameSchema.virtual('innocentVotes').get(function() {
+    return this.players.filter(
+        p => p.vote === VoteType.INNOCENT && 
+            p.status === Status.PLAYING && p.voting
+    ).length;
 });
 
 const gameModel = mongoose.model('game', gameSchema)
