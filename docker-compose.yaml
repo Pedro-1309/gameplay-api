@@ -26,9 +26,8 @@ services:
       - ME_CONFIG_BASICAUTH=false
 
   # the api built on top of the db
-  gameplay-frontend:
+  gameplay-api:
     build: .
-    container_name: gameplay-api
     depends_on:
       - gameplay-mongo
     ports:
