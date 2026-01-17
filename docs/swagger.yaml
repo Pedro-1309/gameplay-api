@@ -58,6 +58,20 @@ paths:
           description: You aren't in this game
         404:
           description: Game not found
+  /status:
+    get:
+      summary: Retrieve details of the current game
+      tags:
+        - Games
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Id and url are null if there is no active game for the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameInfo'
 
 components:
   # -------------------------
@@ -139,6 +153,16 @@ components:
         accused:
           type: string
           example: "6585f9e2b1c2d3e4f5a6b7ks"
+
+    GameInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "6585f9e2b1c2d3e4f5a6b7c8"
+        serverUrl:
+          type: string
+          example: "http://localhost:3000"
 
     PlayerRequest:
       type: object

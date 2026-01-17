@@ -4,6 +4,7 @@ const Phase = require('../engine/townOfSaviom/Phase');
 const Status = require('../engine/townOfSaviom/Status');
 const Role = require('../engine/townOfSaviom/Role');
 const Result = require('../engine/townOfSaviom/Result');
+const { gameSocket } = require('../socket/gameSocket');
 
 exports.addGame = async (req, res) => {
     const room = req.body;
@@ -58,7 +59,12 @@ exports.getGame = async (req, res) => {
     // Check that the player asking info is in fact in this game
     const requestingPlayer = room.players.find(p => p.userId == req.userInfo.id);
     if (!requestingPlayer) {
-        res.sendStatus(403);
+        // If the player isn't in game, but is admin, he can get game info
+        if (req.userInfo.isAdmin) {
+            res.json(room);
+        } else {
+            res.sendStatus(403);
+        }
         return;
     }
     // Filter hidden informations
@@ -83,3 +89,14 @@ exports.getGame = async (req, res) => {
         players: filteredPlayers
     });
 };
+
+exports.getCurrentGame = async (req, res) => {
+    // lean skips the virtual attributes
+    const activeGame = await gameModel.findOne({
+        "players.userId": req.userInfo.id,
+        "players.status": { $in: ['PLAYING', 'WATCHING'] }
+    }).select('_id serverUrl').lean();
+    activeGame.id = activeGame._id;
+    delete activeGame._id;
+    return res.json(activeGame);
+}

@@ -54,7 +54,14 @@ const gameSchema = new mongoose.Schema({
     accused: String
 }, {
     versionKey: false,
-    toJSON: { virtuals: true },
+    toJSON: { 
+        virtuals: true,
+        transform: function (doc, ret) {
+            ret.id = ret._id.toString();
+            delete ret._id;
+            return ret;
+        }
+    },
     toObject: { virtuals: true }
 });
 
@@ -79,6 +86,8 @@ gameSchema.virtual('innocentVotes').get(function() {
             p.status === Status.PLAYING && p.voting
     ).length;
 });
+
+gameSchema.index({ "players.userId": 1, "players.status": 1 });
 
 const gameModel = mongoose.model('game', gameSchema)
 module.exports = { gameModel }

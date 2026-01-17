@@ -122,7 +122,18 @@ class TownOfSaviomClassic extends GameEngine {
     }
 
     // handle specific sub channels join on socket
-    handlePlayerJoin(socket, playerId) {
+    handlePlayerJoin(socket, playerId, isAdmin) {
+        // if the player ain't present in the game don't let him join anything
+        if (!this.getPlayer(playerId)) {
+            // a non playing admin can join and see everything
+            if (isAdmin) {
+                socket.join(this.gameId);
+                socket.join(this.getWatchersChannel());
+                socket.join(this.getWerewolfChannel());
+            }
+            return false;
+        }
+        socket.join(this.gameId);
         // right now watchers that weren't werewolves still can't see their messagges
         if (this.isWatching(playerId)) {
             socket.join(this.getWatchersChannel());
@@ -130,6 +141,7 @@ class TownOfSaviomClassic extends GameEngine {
         if (this.isWerewolf(playerId)) {
             socket.join(this.getWerewolfChannel());
         }
+        return true;
     }
 
     // handle socket event sent from a specific user

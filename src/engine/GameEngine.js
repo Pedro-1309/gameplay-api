@@ -67,7 +67,7 @@ class GameEngine {
     }
 
     // handle specific sub channels join on socket
-    handlePlayerJoin(socket, playerId) { throw new Error("Not implemented yet") }
+    handlePlayerJoin(socket, playerId, isAdmin) { throw new Error("Not implemented yet") }
     // handle socket event sent from a specific user
     handleSocketEvent(userId, event, payload) { throw new Error("Not implemented yet") }
     // operations before engine start

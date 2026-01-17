@@ -11,6 +11,7 @@ exports.gameSocket = (socket) => {
     const gameManager = require('../engine/GameEnginesManager');
     const userId = socket.userInfo.id;
     const name = socket.userInfo.name;
+    const isAdmin = socket.userInfo.isAdmin;
     const gameId = socket.handshake.query.gameId;
 
     log(`User ${name} (${userId}) trying to connect to game ${gameId}`);
@@ -19,33 +20,35 @@ exports.gameSocket = (socket) => {
     if (!engine) {
         return socket.emit('error', 'Game not found');
     }
-    // actual socket join
-    socket.join(gameId);
     // set the socket game id for static use
     socket.gameId = gameId;
 
     socket.to(gameId).emit("MESSAGE_SENT", `${name} connected`);
 
     // to set specific user sub channels
-    engine.handlePlayerJoin(socket, userId);
+    const isPlaying = engine.handlePlayerJoin(socket, userId, isAdmin);
 
     log(`User ${name} joined game ${gameId}`);
 
-    // Forward game events to the game engine
-    Object.values(GameEvent).forEach(eventName => {
-        socket.on(eventName, (payload) => {
-            const gameId = socket.gameId;
+    // Forward game events to the game engine if the user is playing
+    // NB an admin that isn't playing could join just to watch what is happening
+    // without interacting with the game
+    if (isPlaying) {
+        Object.values(GameEvent).forEach(eventName => {
+            socket.on(eventName, (payload) => {
+                const gameId = socket.gameId;
 
-            if (!gameId) {
-                return socket.emit('error', 'You are not in an active game');
-            }
+                if (!gameId) {
+                    return socket.emit('error', 'You are not in an active game');
+                }
 
-            const engine = gameManager.getGame(gameId);
-            if (engine) {
-                engine.handleSocketEvent(socket.userInfo.id, eventName, payload);
-            }
+                const engine = gameManager.getGame(gameId);
+                if (engine) {
+                    engine.handleSocketEvent(socket.userInfo.id, eventName, payload);
+                }
+            });
         });
-    });
+    }
 
     registerDisconnectHandler(socket);
 }
