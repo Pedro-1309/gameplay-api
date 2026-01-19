@@ -96,7 +96,10 @@ exports.getCurrentGame = async (req, res) => {
         "players.userId": req.userInfo.id,
         "players.status": { $in: ['PLAYING', 'WATCHING'] }
     }).select('_id serverUrl').lean();
-    activeGame.id = activeGame._id;
-    delete activeGame._id;
+    console.log(activeGame);
+    if (activeGame) {
+        activeGame.id = activeGame._id;
+        delete activeGame._id;
+    }
     return res.json(activeGame);
 }
