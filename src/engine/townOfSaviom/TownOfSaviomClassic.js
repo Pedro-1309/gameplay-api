@@ -12,7 +12,7 @@ const Result = require('./Result');
 const TICKS_PER_DAY = 120;
 const TICKS_PER_NIGHT = 60;
 const TICKS_PER_DEFENCE = 30;
-const TICKS_PER_STARTUP = 30;
+const TICKS_PER_STARTUP = 15;
 const EXTRA_TICKS_AFTER_DEFENCE = 20;
 
 class TownOfSaviomClassic extends GameEngine {
@@ -299,7 +299,7 @@ class TownOfSaviomClassic extends GameEngine {
             quittingPlayer.status = Status.LEFT;
             this.queueSave(); // send async update on db
             this.broadcast("PLAYER_ELIMINATED", {
-                id: playerId,
+                userId: playerId,
                 cause: 'QUIT'
             });
             this.log(`Player ${playerId} surrendered`);
