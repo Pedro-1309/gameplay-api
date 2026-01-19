@@ -200,16 +200,20 @@ class TownOfSaviomClassic extends GameEngine {
     }
 
     handlePlayerGuilty(playerId) {
+        const votingPlayer = this.getPlayer(playerId);
+        const votedPlayer = this.getPlayer(this.game.accused);
         if (this.isDefence()) {
-            this.updateVote(playerId, this.game.accused, VoteType.GUILTY);
+            this.updateVote(votingPlayer, votedPlayer, VoteType.GUILTY);
             this.queueSave(); // send async update on db    
             this.broadcast("MESSAGE_SENT", `Player ${this.getName(playerId)} voted GUILTY`);
         }
     }
 
     handlePlayerInnocent(playerId) {
+        const votingPlayer = this.getPlayer(playerId);
+        const votedPlayer = this.getPlayer(this.game.accused);
         if (this.isDefence()) {
-            this.updateVote(playerId, this.game.accused, VoteType.INNOCENT);
+            this.updateVote(votingPlayer, votedPlayer, VoteType.INNOCENT);
             this.queueSave(); // send async update on db
             this.broadcast("MESSAGE_SENT", `Player ${this.getName(playerId)} voted INNOCENT`);  
         }
