@@ -122,7 +122,7 @@ exports.submitGameStats = async (gameData) => {
             'x-internal-secret': process.env.X_INTERNAL_SECRET 
         }
     });
-    if (response.status !== 200) {
-        log(response);
+    if (response.status !== 201) {
+        log("Error: " + response);
     }
 }
