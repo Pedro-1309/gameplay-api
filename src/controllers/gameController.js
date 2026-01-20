@@ -4,7 +4,7 @@ const Phase = require('../engine/townOfSaviom/Phase');
 const Status = require('../engine/townOfSaviom/Status');
 const Role = require('../engine/townOfSaviom/Role');
 const Result = require('../engine/townOfSaviom/Result');
-const { gameSocket } = require('../socket/gameSocket');
+const axios = require('axios');
 
 exports.addGame = async (req, res) => {
     const room = req.body;
@@ -102,4 +102,27 @@ exports.getCurrentGame = async (req, res) => {
         delete activeGame._id;
     }
     return res.json(activeGame);
+}
+
+exports.submitGameStats = async (gameData) => {
+    log(process.env.GAMEPLAY_X_INTERNAL_SERVICE_ID);
+    log(process.env.X_INTERNAL_SECRET);
+    const results = gameData.players.map(p => ({
+            _id: p.userId,
+            result: p.result,
+            role: p.role,
+            numbOfPlayers: gameData.numbOfPlayers,
+            gameMode: gameData.gameMode
+    }));
+    log(results);
+    const response = await axios.post(process.env.STATS_SERVICE_URL + "/results", results, {
+        headers: {
+            // This identifies the Lobby Service to the Game Engine
+            'x-internal-service-id': process.env.GAMEPLAY_X_INTERNAL_SERVICE_ID ,
+            'x-internal-secret': process.env.X_INTERNAL_SECRET 
+        }
+    });
+    if (response.status !== 200) {
+        log(response);
+    }
 }

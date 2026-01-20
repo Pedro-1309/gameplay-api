@@ -5,6 +5,7 @@ const Role = require('./Role');
 const config = require('../../configurations/townOfSaviomRoles.json');
 const { fisher_yates_shuffle } = require('./utils');
 const { getChannelName } = require('../../socket/gameSocket');
+const controller = require('../../controllers/gameController');
 const Phase = require('./Phase');
 const Status = require('./Status');
 const VoteType = require('./VoteType');
@@ -60,6 +61,10 @@ class TownOfSaviomClassic extends GameEngine {
                 throw new Error("Game already ended");
         }
         return true;
+    }
+
+    isSpecialRole(playerId) {
+        return this.isRole(playerId, Role.DOCTOR) || this.isRole(playerId, Role.SEER);
     }
 
     isWerewolf(playerId) {
@@ -133,6 +138,9 @@ class TownOfSaviomClassic extends GameEngine {
             }
             return false;
         }
+        // Private room for server communication to specific user
+        socket.join(playerId);
+        // Whole game room to interact during day
         socket.join(this.gameId);
         // right now watchers that weren't werewolves still can't see their messagges
         if (this.isWatching(playerId)) {
@@ -179,6 +187,7 @@ class TownOfSaviomClassic extends GameEngine {
                 message,
                 this.getWatchersChannel()
             )
+            return;
         }
         // send normal message if is day, startup or 
         // is the player being accused defending himself
@@ -202,7 +211,7 @@ class TownOfSaviomClassic extends GameEngine {
     handlePlayerGuilty(playerId) {
         const votingPlayer = this.getPlayer(playerId);
         const votedPlayer = this.getPlayer(this.game.accused);
-        if (this.isDefence()) {
+        if (this.isDefence() && this.isValidVote(votingPlayer, votedPlayer, this.game.accused)) {
             this.updateVote(votingPlayer, votedPlayer, VoteType.GUILTY);
             this.queueSave(); // send async update on db    
             this.broadcast("MESSAGE_SENT", `Player ${this.getName(playerId)} voted GUILTY`);
@@ -212,7 +221,7 @@ class TownOfSaviomClassic extends GameEngine {
     handlePlayerInnocent(playerId) {
         const votingPlayer = this.getPlayer(playerId);
         const votedPlayer = this.getPlayer(this.game.accused);
-        if (this.isDefence()) {
+        if (this.isDefence() && this.isValidVote(votingPlayer, votedPlayer, this.game.accused)) {
             this.updateVote(votingPlayer, votedPlayer, VoteType.INNOCENT);
             this.queueSave(); // send async update on db
             this.broadcast("MESSAGE_SENT", `Player ${this.getName(playerId)} voted INNOCENT`);  
@@ -242,7 +251,8 @@ class TownOfSaviomClassic extends GameEngine {
                         "MESSAGE_SENT", 
                         `Werewolf ${this.getName(playerId)} voted to kill ${this.getName(votedPlayerId)}`
                     );
-                } else if (this.isSpecialRole()) {
+                } else if (this.isSpecialRole(playerId)) {
+                    this.log("accepted special role vote");
                     // if it's night and the voter is a special role he can vote everyone (not himself, already checked)
                     // only he sees it
                     this.updateVote(votingPlayer, votedPlayer, VoteType.ACTION);
@@ -273,6 +283,9 @@ class TownOfSaviomClassic extends GameEngine {
     }
 
     isValidVote(votingPlayer, votedPlayer, votedPlayerId) {
+        // checks that voting is set and playing
+        // checks that voted is undefined, or, if set, is playing
+        // and that you ain't voting yourself
         return votingPlayer && votingPlayer.status === Status.PLAYING &&
             ((votedPlayer && votedPlayer.status === Status.PLAYING) || !votedPlayer) &&
             votingPlayer.userId !== votedPlayerId;
@@ -373,8 +386,11 @@ class TownOfSaviomClassic extends GameEngine {
         // Seer action
         this.game.players.filter(p => p.role === Role.SEER).forEach(p => {
             const investigatedPlayer = this.getPlayer(p.voting);
-            this.broadcastToChannel(p.userId, 'MESSAGE_SENT', `${investigatedPlayer.name} is a ${investigatedPlayer.role}`);
-            investigatedPlayer.votes -= 1;
+            this.log(`${p} investigated ${investigatedPlayer}`);
+            if (investigatedPlayer) {
+                this.broadcastToChannel(p.userId, 'MESSAGE_SENT', `${investigatedPlayer.name} is a ${investigatedPlayer.role}`);
+                investigatedPlayer.votes -= 1;
+            }
         })
         // Other roles
     }
@@ -453,9 +469,9 @@ class TownOfSaviomClassic extends GameEngine {
 
     getProtectedPlayers() {
         const playersProtected = this.game.players.filter(p => p.role === Role.DOCTOR).map(p => p.voting);
-        if (playersProtected.lenght >= 1) {
+        if (playersProtected && playersProtected.length >= 1) {
             // subtract the vote for the werewolf kill decision
-            this.game.players.filter(p => playersProtected.include(p.userId)).forEach(p => {
+            this.game.players.filter(p => playersProtected.includes(p.userId)).forEach(p => {
                 p.votes -= 1;
             })
             return playersProtected;
@@ -466,7 +482,7 @@ class TownOfSaviomClassic extends GameEngine {
     processWerewolfKill() {
         const protectedPlayers = this.getProtectedPlayers();
         const playerToKill = this.getMostVotedPlayer();
-        if (playerToKill && !protectedPlayers.include(playerToKill)) {
+        if (playerToKill && !protectedPlayers.includes(playerToKill.userId)) {
             playerToKill.status = Status.WATCHING;
             this.queueSave(); // send async update on db
             this.broadcast("PLAYER_ELIMINATED", {
@@ -521,7 +537,8 @@ class TownOfSaviomClassic extends GameEngine {
             p.status = Status.LEFT;
         });
         this.game.phase = Phase.GAMEOVER;
-        this.queueSave(); // send async update on db
+        // send async update on db and then submit the result to stats-service
+        this.queueSave().then(() => controller.submitGameStats(this.game));
         this.broadcast("GAMEOVER", this.game.players);
     }
 
@@ -535,7 +552,8 @@ class TownOfSaviomClassic extends GameEngine {
             p.status = Status.LEFT;
         });
         this.game.phase = Phase.GAMEOVER;
-        this.queueSave(); // send async update on db
+        // send async update on db and then submit the result to stats-service
+        this.queueSave().then(() => controller.submitGameStats(this.game));
         this.broadcast("GAMEOVER", this.game.players);
     }
 }
