@@ -232,15 +232,26 @@ class TownOfSaviomClassic extends GameEngine {
                 this.updateVote(votingPlayer, votedPlayer, VoteType.ACTION);
                 this.broadcast("MESSAGE_SENT", `Player ${this.getName(playerId)} voted for ${this.getName(votedPlayerId)}`);
                 this.checkForDefenceStart(votedPlayer);
-            } else if (this.isNight() && this.isWerewolf(playerId) && !this.isWerewolf(votedPlayerId)) {
-                // if it's night and the voter is a werewolf he can vote only non-werewolves
-                // no other actions after the vote
-                this.updateVote(votingPlayer, votedPlayer, VoteType.ACTION);
-                this.broadcastToChannel(
-                    this.getWerewolfChannel(),
-                    "MESSAGE_SENT", 
-                    `Werewolf ${this.getName(playerId)} voted to kill ${this.getName(votedPlayerId)}`
-                );
+            } else if (this.isNight()) {
+                if (this.isWerewolf(playerId) && !this.isWerewolf(votedPlayerId)) {
+                    // if it's night and the voter is a werewolf he can vote only non-werewolves
+                    // no other actions after the vote
+                    this.updateVote(votingPlayer, votedPlayer, VoteType.ACTION);
+                    this.broadcastToChannel(
+                        this.getWerewolfChannel(),
+                        "MESSAGE_SENT", 
+                        `Werewolf ${this.getName(playerId)} voted to kill ${this.getName(votedPlayerId)}`
+                    );
+                } else if (this.isSpecialRole()) {
+                    // if it's night and the voter is a special role he can vote everyone (not himself, already checked)
+                    // only he sees it
+                    this.updateVote(votingPlayer, votedPlayer, VoteType.ACTION);
+                    this.broadcastToChannel(
+                        playerId,
+                        "MESSAGE_SENT", 
+                        `You voted ${this.getName(votedPlayerId)}`
+                    );
+                }
             }
         }
         this.queueSave(); // send async update on db
@@ -341,6 +352,7 @@ class TownOfSaviomClassic extends GameEngine {
                 break;
             // if night end process a werewolf kill then start a new day
             case Phase.NIGHT:
+                this.processSpecialRolesActions();
                 this.processWerewolfKill();
                 this.startDay();
                 break;
@@ -355,6 +367,16 @@ class TownOfSaviomClassic extends GameEngine {
                 }
                 break;
         }
+    }
+
+    processSpecialRolesActions() {
+        // Seer action
+        this.game.players.filter(p => p.role === Role.SEER).forEach(p => {
+            const investigatedPlayer = this.getPlayer(p.voting);
+            this.broadcastToChannel(p.userId, 'MESSAGE_SENT', `${investigatedPlayer.name} is a ${investigatedPlayer.role}`);
+            investigatedPlayer.votes -= 1;
+        })
+        // Other roles
     }
 
     startDay() {
@@ -429,9 +451,22 @@ class TownOfSaviomClassic extends GameEngine {
         return playersWithMaxVotes[0];
     }
 
+    getProtectedPlayers() {
+        const playersProtected = this.game.players.filter(p => p.role === Role.DOCTOR).map(p => p.voting);
+        if (playersProtected.lenght >= 1) {
+            // subtract the vote for the werewolf kill decision
+            this.game.players.filter(p => playersProtected.include(p.userId)).forEach(p => {
+                p.votes -= 1;
+            })
+            return playersProtected;
+        }
+        return undefined;
+    }
+
     processWerewolfKill() {
+        const protectedPlayers = this.getProtectedPlayers();
         const playerToKill = this.getMostVotedPlayer();
-        if (playerToKill) {
+        if (playerToKill && !protectedPlayers.include(playerToKill)) {
             playerToKill.status = Status.WATCHING;
             this.queueSave(); // send async update on db
             this.broadcast("PLAYER_ELIMINATED", {
