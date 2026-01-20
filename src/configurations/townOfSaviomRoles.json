@@ -44,8 +44,8 @@
         "roles": [
             "VILLAGER",
             "VILLAGER",
+            "VILLAGER",
             "SEER",
-            "DOCTOR",
             "WEREWOLF",
             "WEREWOLF"
         ]
@@ -57,7 +57,7 @@
             "VILLAGER",
             "VILLAGER",
             "VILLAGER",
-            "SEER",
+            "VILLAGER",
             "DOCTOR",
             "WEREWOLF",
             "WEREWOLF"
@@ -73,6 +73,138 @@
             "VILLAGER",
             "SEER",
             "DOCTOR",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 9,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "SEER",
+            "DOCTOR",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 10,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "SEER",
+            "DOCTOR",
+            "WEREWOLF",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 11,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "SEER",
+            "DOCTOR",
+            "WEREWOLF",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 12,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "SEER",
+            "DOCTOR",
+            "WEREWOLF",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 9,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 10,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "WEREWOLF",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 11,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "WEREWOLF",
+            "WEREWOLF",
+            "WEREWOLF"
+        ]
+    },
+    {
+        "players": 12,
+        "gameMode": "advanced",
+        "roles": [
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "VILLAGER",
+            "WEREWOLF",
             "WEREWOLF",
             "WEREWOLF"
         ]
