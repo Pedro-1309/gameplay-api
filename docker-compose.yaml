@@ -47,8 +47,10 @@ services:
       - CORS_ORIGIN=${CORS_ORIGIN}
       # stats-service conatiner url
       - STATS_SERVICE_URL=${STATS_SERVICE_URL}
+      # lobby-service conatiner url
+      - LOBBY_SERVICE_URL=${LOBBY_SERVICE_URL}
       # info for internal network use
-      # my credentials to call the stats-service and lobby credentials to check for games start
+      # my credentials to call the stats/lobby-service and lobby credentials to check for games start
       - GAMEPLAY_X_INTERNAL_SERVICE_ID=${GAMEPLAY_X_INTERNAL_SERVICE_ID}
       - LOBBY_X_INTERNAL_SERVICE_ID=${LOBBY_X_INTERNAL_SERVICE_ID}
       - X_INTERNAL_SECRET=${X_INTERNAL_SECRET}
