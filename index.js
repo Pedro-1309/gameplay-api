@@ -16,6 +16,7 @@ const gameManager = require('./src/engine/GameEnginesManager');
 // env variables
 const connectionString = process.env.MONGO_URI || 'mongodb://localhost:27017/game';
 const isDebug = process.env.NODE_ENV == 'debug';
+const isProd = process.env.PROD == 'true';
 const allowedOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
 
 // Swagger setup
@@ -38,7 +39,7 @@ app.options('*', cors(corsOptions));
 // Socket.io setup
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
-    path: isDebug ? '/socket.io' : '/api/gameplay/socket.io',
+    path: isProd ? '/api/gameplay/socket.io' : '/socket.io',
     cors: corsOptions
 });
 app.set('io', io);
