@@ -268,6 +268,9 @@ class TownOfSaviomClassic extends GameEngine {
     }
 
     handleCancelVote(playerId) {
+        if (playerId === this.game.accused) {
+            return;
+        }
         this.updateVote(this.getPlayer(playerId), null, null);
         this.queueSave(); // send async update on db
         if (this.isDay() || this.isDefence()) {
