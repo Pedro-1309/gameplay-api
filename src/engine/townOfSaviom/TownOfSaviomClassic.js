@@ -482,7 +482,7 @@ class TownOfSaviomClassic extends GameEngine {
     processWerewolfKill() {
         const protectedPlayers = this.getProtectedPlayers();
         const playerToKill = this.getMostVotedPlayer();
-        if (playerToKill && !protectedPlayers.includes(playerToKill.userId)) {
+        if (playerToKill && (!protectedPlayers || !protectedPlayers.includes(playerToKill.userId))) {
             playerToKill.status = Status.WATCHING;
             this.queueSave(); // send async update on db
             this.broadcast("PLAYER_ELIMINATED", {
