@@ -487,6 +487,7 @@ class TownOfSaviomClassic extends GameEngine {
         const playerToKill = this.getMostVotedPlayer();
         if (playerToKill && (!protectedPlayers || !protectedPlayers.includes(playerToKill.userId))) {
             playerToKill.status = Status.WATCHING;
+            this.io.in(playerToKill.userId).socketsJoin(this.getWatchersChannel());
             this.queueSave(); // send async update on db
             this.broadcast("PLAYER_ELIMINATED", {
                 userId: playerToKill.userId,
@@ -503,6 +504,7 @@ class TownOfSaviomClassic extends GameEngine {
         if (this.game.guiltyVotes > this.game.innocentVotes) {
             const playerToKill = this.getPlayer(this.game.accused);
             playerToKill.status = Status.WATCHING;
+            this.io.in(playerToKill.userId).socketsJoin(this.getWatchersChannel());
             this.queueSave(); // send async update on db
             this.broadcast("PLAYER_ELIMINATED", {
                 userId: playerToKill.userId,
