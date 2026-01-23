@@ -543,7 +543,9 @@ class TownOfSaviomClassic extends GameEngine {
         });
         this.game.phase = Phase.GAMEOVER;
         // send async update on db and then submit the result to stats-service
-        this.queueSave().then(() => controller.submitGameStats(this.game));
+        this.queueSave()
+            .then(() => controller.submitGameStats(this.game))
+            .then(() => controller.deleteRoom(this.gameId));
         this.broadcast("GAMEOVER", this.game.players);
     }
 
@@ -558,7 +560,9 @@ class TownOfSaviomClassic extends GameEngine {
         });
         this.game.phase = Phase.GAMEOVER;
         // send async update on db and then submit the result to stats-service
-        this.queueSave().then(() => controller.submitGameStats(this.game));
+        this.queueSave()
+            .then(() => controller.submitGameStats(this.game))
+            .then(() => controller.deleteRoom(this.gameId));
         this.broadcast("GAMEOVER", this.game.players);
     }
 }

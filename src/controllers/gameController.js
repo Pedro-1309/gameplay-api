@@ -126,3 +126,18 @@ exports.submitGameStats = async (gameData) => {
         log("Error: " + response);
     }
 }
+
+exports.deleteRoom = async (roomId) => {
+    log(process.env.GAMEPLAY_X_INTERNAL_SERVICE_ID);
+    log(process.env.X_INTERNAL_SECRET);
+    const response = await axios.delete(process.env.LOBBY_SERVICE_URL + `/rooms/${roomId}`, {
+        headers: {
+            // This identifies the Lobby Service to the Game Engine
+            'x-internal-service-id': process.env.GAMEPLAY_X_INTERNAL_SERVICE_ID ,
+            'x-internal-secret': process.env.X_INTERNAL_SECRET 
+        }
+    });
+    if (response.status !== 201) {
+        log("Error: " + response);
+    }
+}
