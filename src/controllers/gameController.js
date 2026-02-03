@@ -8,45 +8,69 @@ const axios = require('axios');
 
 exports.addGame = async (req, res) => {
     const room = req.body;
+    
+    // Input Validation
+    if (!room || !room.players || !room._id) {
+        return res.status(400).send("Invalid Room Data");
+    }
+
+    // If the game already exists, we assume it was created successfully before.
+    const existingGame = await gameModel.findById(room._id);
+    if (existingGame) {
+        return res.status(200).json({ 
+            message: "Game already exists", 
+            gameId: existingGame._id,
+            serverUrl: process.env.GAME_SERVER_URL || "http://gameplay-api:3000"
+        });
+    }
+
     let newGame;
+    let isSavedToDb = false; // Track if we need to rollback
+
     try {
-        // 1. Map Room players to the expanded Game player structure
+        // map Room players to Game players
         const gamePlayers = room.players.map(player => ({
             userId: player.userId,
             name: player.name,
             imageUrl: player.imageUrl,
-            role: Role.VILLAGER,      // Default role, engine will re-assign later
-            status: Status.PLAYING,   // Or Status.ALIVE depending on your enum
-            result: Result.PLAYING,   // Initial state
+            role: Role.VILLAGER,      
+            status: Status.PLAYING,   
+            result: Result.PLAYING,   
             votes: 0
         }));
 
-        // 2. Construct the Game object
+        // construct new Game Object
         newGame = new gameModel({
-            _id: room._id.toString(), // Using the Room's ID as the Game's ID
-            serverUrl: "http://gameplay-api:3000",
+            _id: room._id.toString(), 
+            serverUrl: process.env.GAME_SERVER_URL || "http://gameplay-api:3000",
             numbOfPlayers: room.players.length,
             gameMode: room.gameMode,
             players: gamePlayers,
-            phase: Phase.STARTUP      // Starting phase
+            phase: Phase.STARTUP
         });
 
-        // 3. Save to Database
         await newGame.save();
+        isSavedToDb = true; // Mark as saved
 
+        // If this fails, we must trigger the rollback
         await gameManager.addGame(newGame._id.toString(), req.app.get('io'));
 
         return res.status(201).json({ 
             gameId: newGame._id, 
-            serverUrl: "http://gameplay-api:3000" 
+            serverUrl: newGame.serverUrl 
         });
+
     } catch (error) {
-        // rollback
-        if (newGame) {
-            await newGame.deleteOne();
+        console.error("Error creating Game:", error);
+
+        // ROLLBACK STRATEGY
+        // Only delete from DB if it was actually saved AND the error happened afterwards (in gameManager)
+        if (isSavedToDb && newGame) {
+            console.warn(`Rolling back: Deleting game ${newGame._id} due to initialization failure.`);
+            await newGame.deleteOne().catch(e => console.error("Rollback failed:", e));
         }
-        console.error("Error creating Game from Room:", error);
-        res.sendStatus(500);
+
+        return res.status(500).send("Failed to initialize game instance");
     }
 };
 
