@@ -1,27 +1,84 @@
 services:
-  # the actual db
-  gameplay-mongo:
+  # Node 1 (The likely Primary)
+  mongo1:
     image: mongo
-    restart: always
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
     volumes:
-      - ./import:/docker-entrypoint-initdb.d:ro
+      - mongo1_data:/data/db
+    networks:
+      - gameplay-internal-net
+    healthcheck:
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0', members:[{_id:0,host:'mongo1:27017'},{_id:1,host:'mongo2:27017'},{_id:2,host:'mongo3:27017'}]}) }" | mongosh --port 27017 --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Node 2 (Replica)
+  mongo2:
+    image: mongo
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    volumes:
+      - mongo2_data:/data/db
+    networks:
+      - gameplay-internal-net
+
+  # Node 3 (Replica)
+  mongo3:
+    image: mongo
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    volumes:
+      - mongo3_data:/data/db
     networks:
       - gameplay-internal-net
 
   # the management interface to the db 
-  gameplay-mongo-express:
+  gameplay-mongo1-express:
     depends_on:
-      - gameplay-mongo
+      - mongo1
     image: mongo-express
     restart: always
     ports:
       # for development purposes only
-      - ${GAMEPLAY_DB_UI_PORT:-8083}:8081
+      - 8083:8081
     networks:
       - gameplay-internal-net 
     environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://gameplay-mongo:27017/
-      - ME_CONFIG_MONGODB_SERVER=gameplay-mongo
+      - ME_CONFIG_MONGODB_URL=mongodb://mongo1:27017/
+      - ME_CONFIG_MONGODB_SERVER=mongo1
+      # TODO: use auth to access this or remove entirely on deploy
+      - ME_CONFIG_BASICAUTH=false
+
+  # the management interface to the db 
+  gameplay-mongo2-express:
+    depends_on:
+      - mongo2
+    image: mongo-express
+    restart: always
+    ports:
+      # for development purposes only
+      - 8091:8081
+    networks:
+      - gameplay-internal-net 
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://mongo2:27017/
+      - ME_CONFIG_MONGODB_SERVER=mongo2
+      # TODO: use auth to access this or remove entirely on deploy
+      - ME_CONFIG_BASICAUTH=false
+
+  # the management interface to the db 
+  gameplay-mongo3-express:
+    depends_on:
+      - mongo1
+    image: mongo-express
+    restart: always
+    ports:
+      # for development purposes only
+      - 8092:8081
+    networks:
+      - gameplay-internal-net 
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://mongo3:27017/
+      - ME_CONFIG_MONGODB_SERVER=mongo3
       # TODO: use auth to access this or remove entirely on deploy
       - ME_CONFIG_BASICAUTH=false
 
@@ -29,7 +86,8 @@ services:
   gameplay-api:
     build: .
     depends_on:
-      - gameplay-mongo
+      mongo1:
+        condition: service_healthy
     ports:
       - ${GAMEPLAY_API_PORT}:3000
     networks:
@@ -38,7 +96,7 @@ services:
     environment:
       # gameplay-mongodb-container -> nome container del db
       # games -> nome del db
-      - MONGO_URI=mongodb://gameplay-mongo:27017/games
+      - MONGO_URI=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/games?replicaSet=rs0
       # production or debug
       - NODE_ENV=${NODE_ENV}
       # auth-service container url
@@ -60,3 +118,8 @@ networks:
     driver: bridge
   town-of-saviom-shared-net:
     external: true
+
+volumes:
+  mongo1_data:
+  mongo2_data:
+  mongo3_data:
