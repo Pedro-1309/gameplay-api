@@ -51,14 +51,16 @@ const gameSchema = new mongoose.Schema({
             default: Phase.STARTUP,
             required: true},
     phaseDuration: { type: Number, default: 30 }, // in seconds
+    phaseTimeLeft: { type: Number, default: 30 }, // in seconds
+    defenceStartingTick: { type: Number, default: 0 }, // in seconds
     accused: String,
     createdAt: { 
         type: Date, 
         default: Date.now,
         expires: 86400     // 1 day (24 * 60 * 60)
-    }
+    },
+    activeServerId: { type: String }
 }, {
-    versionKey: false,
     toJSON: { 
         virtuals: true,
         transform: function (doc, ret) {

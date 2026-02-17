@@ -73,8 +73,13 @@ app.use('/', protectedRouter);
 
 // Mongoose setup
 mongoose.connect(connectionString).then(() => {
-    // Start the Manager and resume games from DB
-    gameManager.resumeGames(io);
+    gameManager.setIO(io);
+    // Start the Manager and resume games from DB only if primary
+    if (process.env.SERVER_ID === 'primary') {
+        gameManager.resumeGames();
+    } else {
+        console.log("Backup Server: Skipping startup resume. Waiting for failover traffic.");
+    }
     // Start app only after db connectiona and games are resumed
     httpServer.listen(3000, () => console.log("Server started"));
 });

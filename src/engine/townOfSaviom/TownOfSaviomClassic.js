@@ -19,7 +19,6 @@ const EXTRA_TICKS_AFTER_DEFENCE = 20;
 class TownOfSaviomClassic extends GameEngine {
     // in-memory reference to the game
     game;
-    defenceStartingTick;
     phasesWithNoKills = 0;
     async init() {
         // get game from db
@@ -36,8 +35,8 @@ class TownOfSaviomClassic extends GameEngine {
             player.role = shuffledRoles[index];
         });
         // set ticks for startup
-        this.remainingTicksOfThisPhase = TICKS_PER_STARTUP;
-        this.game.phaseDuration = this.remainingTicksOfThisPhase;
+        this.game.phaseTimeLeft = TICKS_PER_STARTUP;
+        this.game.phaseDuration = this.game.phaseTimeLeft;
         // save
         await this.game.save();
         this.log(this.game);
@@ -45,12 +44,15 @@ class TownOfSaviomClassic extends GameEngine {
 
     // resume from database doc
     async resume(data) {
+        const truePhaseTimeLeft = data.phaseTimeLeft;
         this.game = data;
         switch (this.game.phase) {
             case Phase.STARTUP:
-                this.remainingTicksOfThisPhase = TICKS_PER_STARTUP;
+                this.game.phaseTimeLeft = TICKS_PER_STARTUP;
                 break;
             case Phase.DEFENCE:
+                this.startDefence();
+                break;
             case Phase.DAY:
                 this.startDay();
                 break;
@@ -60,6 +62,7 @@ class TownOfSaviomClassic extends GameEngine {
             default:
                 throw new Error("Game already ended");
         }
+        this.game.phaseTimeLeft = truePhaseTimeLeft;
         return true;
     }
 
@@ -299,8 +302,8 @@ class TownOfSaviomClassic extends GameEngine {
         if (votedPlayer.votes >= majority) {
             this.log(`Player ${votedPlayer} has been accused by majority`);
             this.game.accused = votedPlayer.userId;
+            this.game.defenceStartingTick = this.game.phaseTimeLeft;
             this.queueSave(); // send async update on db
-            this.defenceStartingTick = this.remainingTicksOfThisPhase;
             this.startDefence();
         }
     }
@@ -402,12 +405,12 @@ class TownOfSaviomClassic extends GameEngine {
         this.log("Starting day phase");
         this.resetVotes();
         this.game.phase = Phase.DAY;
-        this.remainingTicksOfThisPhase = TICKS_PER_DAY;
-        this.game.phaseDuration = this.remainingTicksOfThisPhase;
+        this.game.phaseTimeLeft = TICKS_PER_DAY;
+        this.game.phaseDuration = TICKS_PER_DAY;
         this.queueSave(); // send async update on db
         this.broadcast("PHASE_CHANGE", {
             phase: Phase.DAY,
-            timeRemaining: this.remainingTicksOfThisPhase
+            timeRemaining: this.game.phaseTimeLeft
         })
     }
 
@@ -415,12 +418,12 @@ class TownOfSaviomClassic extends GameEngine {
         this.log("Starting night phase");
         this.resetVotes();
         this.game.phase = Phase.NIGHT;
-        this.remainingTicksOfThisPhase = TICKS_PER_NIGHT;
-        this.game.phaseDuration = this.remainingTicksOfThisPhase;
+        this.game.phaseTimeLeft = TICKS_PER_NIGHT;
+        this.game.phaseDuration = TICKS_PER_NIGHT;
         this.queueSave(); // send async update on db
         this.broadcast("PHASE_CHANGE", {
             phase: Phase.NIGHT,
-            timeRemaining: this.remainingTicksOfThisPhase
+            timeRemaining: this.game.phaseTimeLeft
         })
     }
 
@@ -428,12 +431,12 @@ class TownOfSaviomClassic extends GameEngine {
         this.log("Starting defence phase");
         this.resetVotes();
         this.game.phase = Phase.DEFENCE;
-        this.remainingTicksOfThisPhase = TICKS_PER_DEFENCE;
-        this.game.phaseDuration = this.remainingTicksOfThisPhase;
+        this.game.phaseTimeLeft = TICKS_PER_DEFENCE;
+        this.game.phaseDuration = TICKS_PER_DEFENCE;
         this.queueSave(); // send async update on db
         this.broadcast("PHASE_CHANGE", {
             phase: Phase.DEFENCE,
-            timeRemaining: this.remainingTicksOfThisPhase,
+            timeRemaining: this.game.phaseTimeLeft,
             accused: this.game.accused
         })
     }
@@ -442,12 +445,12 @@ class TownOfSaviomClassic extends GameEngine {
         this.log("Resuming day phase");
         this.resetVotes();
         this.game.phase = Phase.DAY;
-        this.remainingTicksOfThisPhase = this.defenceStartingTick + EXTRA_TICKS_AFTER_DEFENCE;
-        this.game.phaseDuration = this.remainingTicksOfThisPhase;
+        this.game.phaseTimeLeft = this.game.defenceStartingTick + EXTRA_TICKS_AFTER_DEFENCE;
+        this.game.phaseDuration = this.game.phaseTimeLeft;
         this.queueSave(); // send async update on db
         this.broadcast("PHASE_CHANGE", {
             phase: Phase.DAY,
-            timeRemaining: this.remainingTicksOfThisPhase
+            timeRemaining: this.game.phaseTimeLeft
         })
     }
 

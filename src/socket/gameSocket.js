@@ -7,7 +7,7 @@ log = (message) => {
     }
 }
 
-exports.gameSocket = (socket) => {
+exports.gameSocket = async (socket) => {
     const gameManager = require('../engine/GameEnginesManager');
     const userId = socket.userInfo.id;
     const name = socket.userInfo.name;
@@ -16,10 +16,15 @@ exports.gameSocket = (socket) => {
 
     log(`User ${name} (${userId}) trying to connect to game ${gameId}`);
 
-    const engine = gameManager.getGame(gameId);
+    let engine = gameManager.getGame(gameId);
+    if (!engine) {
+        // This line triggers the recovery on the Backup Server
+        engine = await gameManager.loadGame(gameId);
+    }
     if (!engine) {
         return socket.emit('error', 'Game not found');
     }
+    
     // set the socket game id for static use
     socket.gameId = gameId;
 

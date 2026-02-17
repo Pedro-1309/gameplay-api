@@ -1,11 +1,11 @@
 const isDebug = process.env.NODE_ENV == 'debug';
+const gameManager = require('./GameEnginesManager');
 
 class GameEngine {
     constructor(gameId, io) {
         this.gameId = gameId;
         this.io = io;
         this.timer = null;
-        this.remainingTicksOfThisPhase = 30; // seconds
         this.tickDuration = 1000; // 1 second
     }
     
@@ -17,6 +17,11 @@ class GameEngine {
                 await this.game.save();
                 this.log("Game document saved successfully.");
             } catch (err) {
+                if (err.name === 'VersionError') {
+                    console.error(`[CRITICAL] Split Brain detected! Another server has taken over game ${this.gameId}. Shutting down local instance.`);
+                    gameManager.stopGame(this.gameId);
+                    return;
+                }
                 this.error("Failed to save game document:", err);
             }
         });
@@ -25,14 +30,14 @@ class GameEngine {
 
     async start() {
         this.stop(); // Clear any existing timer
-        this.log("Timer: " + this.remainingTicksOfThisPhase);
+        this.log("Timer: " + this.game.phaseTimeLeft);
 
         const tick = async () => {
-            this.remainingTicksOfThisPhase--;
-            this.broadcast("SYNC_TIME", { time: this.remainingTicksOfThisPhase });
-            this.log("Timer: " + this.remainingTicksOfThisPhase);
-
-            if (this.remainingTicksOfThisPhase <= 0) {
+            this.game.phaseTimeLeft--;
+            this.queueSave(); // save remaining time to DB for failover recovery
+            this.broadcast("SYNC_TIME", { time: this.game.phaseTimeLeft });
+            this.log("Timer: " + this.game.phaseTimeLeft);
+            if (this.game.phaseTimeLeft <= 0) {
                 try {
                     await this.nextPhase();
                     if (this.canContinue()) {

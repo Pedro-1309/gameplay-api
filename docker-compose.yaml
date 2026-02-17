@@ -1,5 +1,5 @@
 services:
-  # Node 1 (The likely Primary)
+  # Node 1 (Primary)
   mongo1:
     image: mongo
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
@@ -83,13 +83,12 @@ services:
       - ME_CONFIG_BASICAUTH=false
 
   # the api built on top of the db
-  gameplay-api:
+  game-server-1:
+    container_name: game-server-1
     build: .
     depends_on:
       mongo1:
         condition: service_healthy
-    ports:
-      - ${GAMEPLAY_API_PORT}:3000
     networks:
       - gameplay-internal-net
       - town-of-saviom-shared-net
@@ -112,6 +111,51 @@ services:
       - GAMEPLAY_X_INTERNAL_SERVICE_ID=${GAMEPLAY_X_INTERNAL_SERVICE_ID}
       - LOBBY_X_INTERNAL_SERVICE_ID=${LOBBY_X_INTERNAL_SERVICE_ID}
       - X_INTERNAL_SECRET=${X_INTERNAL_SECRET}
+      - SERVER_ID=primary # "primary" or "backup"
+
+  # the replicate api built on top of the db
+  game-server-2:
+    container_name: game-server-2
+    build: .
+    depends_on:
+      mongo1:
+        condition: service_healthy
+    networks:
+      - gameplay-internal-net
+      - town-of-saviom-shared-net
+    environment:
+      # gameplay-mongodb-container -> nome container del db
+      # games -> nome del db
+      - MONGO_URI=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/games?replicaSet=rs0
+      # production or debug
+      - NODE_ENV=${NODE_ENV}
+      # auth-service container url
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      # origin url accepted by cors
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      # stats-service conatiner url
+      - STATS_SERVICE_URL=${STATS_SERVICE_URL}
+      # lobby-service conatiner url
+      - LOBBY_SERVICE_URL=${LOBBY_SERVICE_URL}
+      # info for internal network use
+      # my credentials to call the stats/lobby-service and lobby credentials to check for games start
+      - GAMEPLAY_X_INTERNAL_SERVICE_ID=${GAMEPLAY_X_INTERNAL_SERVICE_ID}
+      - LOBBY_X_INTERNAL_SERVICE_ID=${LOBBY_X_INTERNAL_SERVICE_ID}
+      - X_INTERNAL_SECRET=${X_INTERNAL_SECRET}
+      - SERVER_ID=backup # "primary" or "backup"
+
+  gameplay-api:
+    image: nginx:latest
+    ports:
+      - ${GAMEPLAY_API_PORT}:3000
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - game-server-1
+      - game-server-2
+    networks:
+      - gameplay-internal-net
+      - town-of-saviom-shared-net
 
 networks:
   gameplay-internal-net:
