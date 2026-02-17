@@ -1,5 +1,4 @@
 const isDebug = process.env.NODE_ENV == 'debug';
-const gameManager = require('./GameEnginesManager');
 
 class GameEngine {
     constructor(gameId, io) {
@@ -19,6 +18,7 @@ class GameEngine {
             } catch (err) {
                 if (err.name === 'VersionError') {
                     console.error(`[CRITICAL] Split Brain detected! Another server has taken over game ${this.gameId}. Shutting down local instance.`);
+                    const gameManager = require('./GameEnginesManager');
                     gameManager.stopGame(this.gameId);
                     return;
                 }

@@ -34,6 +34,7 @@ describe('TownOfSaviomClassic', () => {
             phase: Phase.DAY,
             playersAlive: 4,
             werewolfAlive: 1,
+            phaseTimeLeft: 30,
             accused: undefined,
             players: [
                 { userId: 'p1', name: 'Alice', role: Role.VILLAGER, status: Status.PLAYING, votes: 0 },
@@ -67,7 +68,7 @@ describe('TownOfSaviomClassic', () => {
         it('start the day phase correctly', () => {
             engine.startDay();
             expect(engine.game.phase).toBe(Phase.DAY);
-            expect(engine.remainingTicksOfThisPhase).toBe(120); // TICKS_PER_DAY
+            expect(engine.game.phaseTimeLeft).toBe(120); // TICKS_PER_DAY
             expect(engine.broadcast).toHaveBeenCalledWith("PHASE_CHANGE", expect.any(Object));
             expect(engine.queueSave).toHaveBeenCalled();
         });
@@ -75,7 +76,7 @@ describe('TownOfSaviomClassic', () => {
         it('start the night phase correctly', () => {
             engine.startNight();
             expect(engine.game.phase).toBe(Phase.NIGHT);
-            expect(engine.remainingTicksOfThisPhase).toBe(60); // TICKS_PER_NIGHT
+            expect(engine.game.phaseTimeLeft).toBe(60); // TICKS_PER_NIGHT
         });
 
         it('reset all votes when changing phase', () => {
@@ -158,6 +159,29 @@ describe('TownOfSaviomClassic', () => {
             
             expect(engine.canContinue()).toBe(false);
             expect(engine.processVillagerWin).toHaveBeenCalled();
+        });
+    });
+
+    describe('Game Timer', () => {
+        beforeEach(() => {
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        it('start() emits SYNC_TIME every second', async () => {
+            // "Fake" methods for start() to work
+            engine.nextPhase = jest.fn();
+            engine.canContinue = jest.fn().mockReturnValue(true);
+
+            engine.start();
+            jest.advanceTimersByTime(1000);
+
+            // Timer needs to be at 29s and to emit the event
+            expect(engine.game.phaseTimeLeft).toBe(29);
+            expect(engine.broadcast).toHaveBeenCalledWith('SYNC_TIME', { time: 29 });
         });
     });
 });

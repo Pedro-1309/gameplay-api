@@ -34,17 +34,4 @@ describe('GameEngine - Base Class', () => {
         await engine.queueSave();
         expect(engine.game.save).toHaveBeenCalledTimes(1);
     });
-
-    test('start() emits SYNC_TIME every second', () => {
-        // "Fake" methods for start() to work
-        engine.nextPhase = jest.fn();
-        engine.canContinue = jest.fn().mockReturnValue(true);
-
-        engine.start();
-        jest.advanceTimersByTime(1000);
-
-        // Timer needs to be at 29s and to emit the event
-        expect(engine.remainingTicksOfThisPhase).toBe(29);
-        expect(mockIo.emit).toHaveBeenCalledWith('SYNC_TIME', { time: 29 });
-    });
 });
