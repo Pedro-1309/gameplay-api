@@ -46,17 +46,17 @@ describe('TownOfSaviomClassic', () => {
     });
 
     describe('Roles and Status', () => {
-        it('correctly identify a werewolf', () => {
+        test('identify a werewolf', () => {
             expect(engine.isWerewolf('p2')).toBe(true);
             expect(engine.isWerewolf('p1')).toBe(false);
         });
 
-        it('correctly identify special roles', () => {
+        test('identify special roles', () => {
             expect(engine.isSpecialRole('p3')).toBe(true); // Doctor
             expect(engine.isSpecialRole('p1')).toBe(false); // Villager
         });
 
-        it('correctly fetch a player by ID', () => {
+        test('fetch a player by ID', () => {
             const player = engine.getPlayer('p1');
             expect(player.name).toBe('Alice');
             expect(player.status).toBe(Status.PLAYING);
@@ -65,7 +65,7 @@ describe('TownOfSaviomClassic', () => {
     });
 
     describe('Phase Management', () => {
-        it('start the day phase correctly', () => {
+        test('start the day phase', () => {
             engine.startDay();
             expect(engine.game.phase).toBe(Phase.DAY);
             expect(engine.game.phaseTimeLeft).toBe(120); // TICKS_PER_DAY
@@ -73,13 +73,13 @@ describe('TownOfSaviomClassic', () => {
             expect(engine.queueSave).toHaveBeenCalled();
         });
 
-        it('start the night phase correctly', () => {
+        test('start the night phase', () => {
             engine.startNight();
             expect(engine.game.phase).toBe(Phase.NIGHT);
             expect(engine.game.phaseTimeLeft).toBe(60); // TICKS_PER_NIGHT
         });
 
-        it('reset all votes when changing phase', () => {
+        test('reset all votes when changing phase', () => {
             engine.game.players[0].votes = 2;
             engine.game.players[0].voting = 'p2';
             
@@ -91,7 +91,7 @@ describe('TownOfSaviomClassic', () => {
     });
 
     describe('Voting Logic', () => {
-        it('validate a correct vote', () => {
+        test('validate a correct vote', () => {
             const voter = engine.getPlayer('p1');
             const target = engine.getPlayer('p2');
             
@@ -99,14 +99,14 @@ describe('TownOfSaviomClassic', () => {
             expect(isValid).toBe(true);
         });
 
-        it('invalidate a self-vote', () => {
+        test('invalidate a self-vote', () => {
             const voter = engine.getPlayer('p1');
             
             const isValid = engine.isValidVote(voter, voter, 'p1');
             expect(isValid).toBe(false);
         });
 
-        it('update votes and remove previous ones', () => {
+        test('update votes and remove previous ones', () => {
             const voter = engine.getPlayer('p1');
             const target1 = engine.getPlayer('p2');
             const target2 = engine.getPlayer('p3');
@@ -122,7 +122,7 @@ describe('TownOfSaviomClassic', () => {
             expect(voter.voting).toBe('p3');
         });
 
-        it('defence phase if majority is reached', () => {
+        test('defence phase if majority is reached', () => {
             engine.startDefence = jest.fn();
             const target = engine.getPlayer('p2');
             target.votes = 3; // Majority out of 4 players
@@ -140,13 +140,13 @@ describe('TownOfSaviomClassic', () => {
             engine.processVillagerWin = jest.fn();
         });
 
-        it('continue the game if no win condition is met', () => {
+        test('continue the game if no win condition is met', () => {
             expect(engine.canContinue()).toBe(true);
             expect(engine.processWerewolfWin).not.toHaveBeenCalled();
             expect(engine.processVillagerWin).not.toHaveBeenCalled();
         });
 
-        it('trigger werewolf win if they are half or more of the alive players', () => {
+        test('trigger werewolf win if they are half or more of the alive players', () => {
             engine.game.playersAlive = 2;
             engine.game.werewolfAlive = 1;
             
@@ -154,7 +154,7 @@ describe('TownOfSaviomClassic', () => {
             expect(engine.processWerewolfWin).toHaveBeenCalled();
         });
 
-        it('trigger villager win if all werewolves are dead', () => {
+        test('trigger villager win if all werewolves are dead', () => {
             engine.game.werewolfAlive = 0;
             
             expect(engine.canContinue()).toBe(false);
@@ -171,7 +171,7 @@ describe('TownOfSaviomClassic', () => {
             jest.useRealTimers();
         });
 
-        it('start() emits SYNC_TIME every second', async () => {
+        test('start() emits SYNC_TIME every second', async () => {
             // "Fake" methods for start() to work
             engine.nextPhase = jest.fn();
             engine.canContinue = jest.fn().mockReturnValue(true);
